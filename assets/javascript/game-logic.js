@@ -16,7 +16,7 @@ var database = firebase.database();
 
 // Google Auth data capture -- NEED TO FIGURE THIS OUT
 var user = firebase.auth().currentUser;
-var UID = user.uid;
+var UID;
 var displayName;
 var points;
 
@@ -43,7 +43,7 @@ firebase.auth().onAuthStateChanged(function(user) {
 	  if (currentData === null) {
 	    return {name: displayName, points: 0, guesses: ['PLACEHOLDER']};
 	  } else {
-	    console.log('User ' + displayName + ' already exists.');
+	    console.log('User' + displayName + 'already exists.');
 	    return; // Abort the transaction.
 	  }
 	}, function(error, committed, snapshot) {
@@ -56,6 +56,34 @@ firebase.auth().onAuthStateChanged(function(user) {
 	  }
 	  console.log(displayName + '\'s data: ,' + snapshot.val());
 	});
+
+	/*updateGuesses();*/
+
+	// add to game-room if there's < 2 players
+
+	/*if (currentPlayers < 2) {
+		currentPlayersRef.transaction(function(currentData) {
+		  if (currentData === null) {
+		    return {name: displayName, points: 0, guesses: []};
+		  } else {
+		    console.log('User' + displayName + 'already added to game-room.');
+		    return; // Abort the transaction.
+		  }
+		}, function(error, committed, snapshot) {
+		  if (error) {
+		    console.log('Transaction failed abnormally!', error);
+		  } else if (!committed) {
+		    console.log('We aborted the transaction (because' + UID + 'already added to game-room).');
+		  } else {
+		    console.log('User' + displayName + 'added!');
+		  }
+		  console.log(displayName + '\'s data: ,' + snapshot.val());
+		});
+	}
+	else {
+		alert('sorry, there\'s no more room.')
+	}*/
+
 
   } else {
     // No user is signed in.
@@ -84,7 +112,7 @@ currentPlayersRef.on('value', function (snapshot) {
 var teamPoints = 0;
 
 // stores user guesses to be referenced to later and compared
-var guesses = ['PLACEHOLDER'];
+var guesses = [];
 
 //create random number generator
 	// to select random word from our word bank
@@ -93,32 +121,25 @@ function generateRandomNum (min, max) {
 	return Math.floor(Math.random() * max) + min;
 }
 
+// need to access users based on game room
+// grab child node keys to access their arrays and use in calculateTeamPoints to set to local variable for comparison
+
+var playerOneGuesses;
+var playerTwoGuesses;
+
+function getPlayerGuesses () {
+	// get children keys when they're added to the current players folder
+	database.ref('/currentPlayers').on('child_added', function (snapshot) {
+
+	})
+}
+
 // calculate team points
 function calculateTeamPoints () {
-	// if player 1 and player 2 share a similar word in their guesses, grant one point to each
-		// calculate difference between the array lengths
-		// whichever one has less elements, add placeholders to have same lengths
-		// iterate over one array, check to see if a word exists in another
-			// if there's a match, push to new array
-			// count length of new array and add points to each player
-	if (p1guesses.length > p2guesses.length) {
-		// placeholder is uppercase to dinstinguish between user guesses
-		p2guesses.push('EXTRA');
-	}
-	else if (p1guesses.length < p2guesses.length) {
-		p1guesses.push('EXTRA');
-	}
+// access users' firebase array and compare to other player's
 
-	for (var i=0; i < p2guesses.length; i++) {
-		if (p1guesses.includes(p2guesses[i])) {
-			p1p2Matches.push(p2guesses[i]);
-		}
-	}
-
-	teamPoints = p1p2Matches.length;
-
-	p1points += teamPoints;
-	p2points += teamPoints;
+// take one array and iterate through each of the other elements in the other array
+	// for loop within a for loop
 
 }
 
@@ -147,19 +168,22 @@ $('#submit-btn').click(function (event) {
 
 	// clear input field
 	$('#userInput').val('');
-})
-// add firebase obj listener for user data -- array changes
-// whenever a user's array is updated, update changes here
 
-database.ref('/users/' + UID).on('value', function (snapshot) {
-	console.log('HELLO I WORKED');
-	console.log(snapshot);
-	console.log(snapshot.val());
-	console.log(snapshot.child('guesses'));
-	console.log(snapshot.val().guesses);
-	/*userData.guesses = guesses;*/
-	/*console.log(userData.guesses);*/
+	// update firebase array
+	updateGuesses();
 })
+
+// whenever this function is run, update the user's firebase array with the local array
+function updateGuesses () {
+	database.ref('/users/guesses').set(guesses)
+
+	database.ref('/users/guesses').on('value', function (snapshot) {
+		var guessesRef = snapshot.val();
+		console.log('firebase array: ' + guessesRef);
+	})
+
+	console.log('this is the local array: ' + guesses)
+}
 
 // change click event to function on setTimeout -- each round lasts 30 seconds
 // run this function, then setTimeout on point calculation for 30 seconds
