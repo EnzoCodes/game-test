@@ -1,7 +1,9 @@
 // variable declaration
 
 // word bank -- randomly select search term from here
-var searchTerms = ['puppy','cats','pink flowers','trees and sun'];
+var searchTerms = ['puppy','cats','pink flowers','trees and sun','bubble'
+'test','plastic','church','shop','knot','chicken','snails','cactus','pizza','monkey','coast','train','collar','watch','space','star','part','oatmeal','honey','frog','pipe','icicle','plane', 'nest','lock'];
+
 // add an indicator to determine if a term was already searched/displayed to the users -- refernce trivia game structure
 	// prevents re-display of images
 	// true/false asked property
