@@ -60,7 +60,7 @@ firebase.auth().onAuthStateChanged(function(user) {
 	/*updateGuesses();*/
 
 	// add to game-room if there's < 2 players
-/*	
+/*
 	if (currentPlayers < 2) {
 		currentPlayersRef.transaction(function(currentData) {
 		  if (currentData === null) {
@@ -108,7 +108,7 @@ currentPlayersRef.on('value', function (snapshot) {
 	currentPlayers = snapshot.numChildren();
 
 	// when player disconnects, remove from folder
-	
+
 	// when player disconnects, end game -- no points added
 
 	console.log('current players: ' + currentPlayers)
@@ -132,19 +132,6 @@ function generateRandomNum (min, max) {
 	return Math.floor(Math.random() * max) + min;
 }
 
-// need to access users based on game room
-// grab child node keys to access their arrays and use in calculateTeamPoints to set to local variable for comparison
-
-var playerOneGuesses;
-var playerTwoGuesses;
-
-function getPlayerGuesses () {
-	// get children keys when they're added to the current players folder
-	database.ref('/currentPlayers').on('child_added', function (snapshot) {
-
-	})
-}
-
 // capture user input and store in guesses array
 // need to reference respective array according to firebase storage /users/UID.guesses and update
 // need to add listener and use snapshot.val() to access the UID.guesses prop
@@ -162,7 +149,7 @@ $('#submit-btn').click(function (event) {
 	// clear input field
 	$('#userInput').val('');
 
-	// update firebase array
+
 	updateGuesses();
 	evalGuesses();
 	calculateTeamPoints();
@@ -206,9 +193,21 @@ function evalGuesses () {
         console.log(currentGuesses);
 
         for (var i=0; i < currentGuesses.length; i++) {
-        	// if the word does not exist in the wordCount obj, add the key-val pair to it
-        	if (!wordCount[currentGuesses[i]]) {
-	        	wordCount[currentGuesses[i]].count = arrayCompare(currentGuesses, currentGuesses[i]);
+
+        	var word = currentGuesses[i];
+
+			// if the word does not exist in the wordCount obj, add the key-val pair to it
+        	if (!wordCount[word]) {
+        		// create an empty obj for the word
+        		wordCount[word] = {}
+        		// create a count prop
+	        	wordCount[word].count = arrayCompare(currentGuesses, word);
+
+	        }
+
+	        // if it exists, update its count
+	        else if (wordCount[word]) {
+	        	wordCount[word].count = arrayCompare(currentGuesses, word);
 	        }
         }
 
@@ -229,10 +228,30 @@ function calculateTeamPoints () {
     	// if the key's value is greater than or equal to 2, increment teampoints by 1
     	if (!wordCount[key].checked && wordCount[key].count >= 2) {
     		wordCount[key].checked = true;
+    		teamPoints++;
+
+    		console.log(wordCount[key]);
+    		console.log(wordCount[key].count);
+    		console.log(wordCount[key].checked);
     	}
     }
 
     console.log('after calc points: ' + wordCount)
+    console.log(teamPoints);
+}
+
+// update the user points in firebase with the teamPoints -- run this last
+function updatePoints () {
+
+	var userHistPoints;
+
+	database.ref('/users/' + UID + '/points').on('value', function (snapshot) {
+		userHistPoints = snapshot.val();
+	})
+
+	var updatedPoints = userHistPoints + teamPoints;
+
+	database.ref('/users/' + UID + '/points').set(updatedPoints);
 }
 
 // run this at the end of the game round
@@ -289,4 +308,4 @@ function showImage () {
 
 
 
-})
+});
